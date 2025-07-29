@@ -6,21 +6,17 @@ from scipy.stats import nakagami
 
 def nakagami_channel(config_dict, a, b):
     m = config_dict['nakagami_shape_param']
-
     abs_value = nakagami.rvs(m, scale=np.sqrt(1.0), size=(a, b))
     phase_value = np.random.uniform(0, 2 * np.pi, size=(a, b))
-
     channel_matrix = abs_value * np.exp(1j * phase_value)
     return channel_matrix
 
 
 def db2pow(db):
-    """Convert decibels (dB) to power ratio."""
     return 10 ** (db / 10)
 
 
 def pow2db(power):
-    """Convert power ratio to decibels (dB)."""
     return 10 * np.log10(power)
 
 
@@ -30,24 +26,19 @@ def pskmod(symbols, mod_order):
 
 def pskdemod(signal, mod_order):
     phase = np.angle(signal) % (2 * np.pi)
-
     symbols = np.round(phase / (2 * np.pi / mod_order)) % mod_order
     return symbols.astype(int)
 
 
 def env_response(config_dict):
     nb = config_dict["num_pilot_block"]
-
     num_sn = config_dict["num_sn"]
     num_jn = config_dict["num_jn"]
-
     snr_tn = config_dict["snr_tn"]
     snr_jn = config_dict["snr_jn"]
-
     num_coherence = config_dict["num_coherence_symbols"]
     num_pilot = config_dict["num_pilot_symbols"]
     num_data = config_dict["num_data_symbols"]
-
     num_antennas = config_dict["num_antennas"]
 
     noise_variance = 1
@@ -83,7 +74,7 @@ def env_response(config_dict):
         cc += 1
         if sec == 0:
             new_num_data = num_data
-            data_block_length = new_num_data  # when sec==0, use the full num_data
+            data_block_length = new_num_data  # When sec==0, use the full num_data
 
         amp_jn_signal = np.sqrt(db2pow(snr_jn) * noise_variance)
         amp_tn_signal = np.sqrt(db2pow(snr_tn) * noise_variance)
@@ -131,7 +122,7 @@ def env_response(config_dict):
                 amp_jn_signal * jn_chan_mat_d @ np.diag(jamming_symbols_d.reshape(-1))) + noise_matrix_d  # Data
         sn_rx_mat_p2 = (amp_tn_signal * tn_chan_vec @ mod_pilot_symbols) + (
                 amp_jn_signal * jn_chan_mat_p2 @ np.diag(jamming_symbols_p2.reshape(-1))) + noise_matrix_p2  # Next
-        # pilot
+                                                                                                             # pilot
 
         # Control Channel
         fc_chan_mat = nakagami_channel(config_dict, num_antennas, num_sn)
@@ -154,7 +145,6 @@ def env_response(config_dict):
 
         # Compute null space for mod_pilot_symbols (treat mod_pilot_symbols as a 1 x num_pilot row vector)
         pilots_perp_mat = null_space(mod_pilot_symbols)
-        # print(mod_pilot_symbols.shape, pilots_perp_mat.shape)
 
         # Estimated jammer signal (projecting est_sn_rx_mat_p1 onto the null space)
         est_jn_signal_p1 = est_sn_rx_mat_p1 @ pilots_perp_mat
@@ -185,10 +175,10 @@ def env_response(config_dict):
         power_signal_db = pow2db(np.linalg.norm(rx_mat_canceled_jam, 'fro') ** 2 / (np.prod(rx_mat_canceled_jam.shape)))
 
         est_tn_chan_vec = (rx_mat_canceled_jam @ np.conj(mod_pilot_symbols.T) / (
-                    np.linalg.norm(mod_pilot_symbols) ** 2)) / amp_tn_signal
+                np.linalg.norm(mod_pilot_symbols) ** 2)) / amp_tn_signal
 
         est_data_symbol_vec = (est_tn_chan_vec.conj().T / (np.linalg.norm(est_tn_chan_vec) ** 2)) @ (
-                    chan_perp_mat @ est_sn_rx_mat_d)
+                chan_perp_mat @ est_sn_rx_mat_d)
 
         demod_est_data_symbol_vec = pskdemod(est_data_symbol_vec, mod_order)
 
