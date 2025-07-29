@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-
 from config import config_dict
 from env_simulations.env_functions import env_response
 
