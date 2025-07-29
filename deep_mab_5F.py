@@ -24,7 +24,7 @@ step_list = step_dict['eval_episodes_pisodes']
 action_set = config_dict['action_set']
 print(action_set)
 number_actions = len(action_set)
-number_context =5
+number_context = 5
 
 input_model_size = number_context
 # Epsilon setting
