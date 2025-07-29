@@ -12,7 +12,7 @@ epoch = 20
 step_list = step_dict['steps_param']
 
 action_set = config_dict['action_set']
-print(action_set)
+
 number_actions = len(action_set)
 number_context = 5
 
