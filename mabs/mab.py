@@ -7,10 +7,10 @@ import matplotlib
 matplotlib.use('TkAgg')  # or 'Qt5Agg' or another supported GUI backend
 import matplotlib.pyplot as plt
 
-# Epsilon setting
 EPSILON = 0.15
 LEARNING_RATE = 0.3
 NUM_EPISODES = 10
+PRINT_UPDATE_INTERVAL = 20
 
 step_list = step_dict['steps_param']
 action_set = config_dict['action_set']
@@ -37,13 +37,13 @@ for episode_idx in range(NUM_EPISODES):
     config_dict['num_pilot_block'] = action_set[action_index]
 
     rnd_step_idx = np.random.choice(step_list.shape[1])
-    print(rnd_step_idx)
+
     config_dict['num_coherence_symbols'] = step_list[0][rnd_step_idx]
     config_dict['snr_jn'] = step_list[1][rnd_step_idx]
     config_dict['snr_tn'] = step_list[2][rnd_step_idx]
 
     # Initialize the first context
-    total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
+    total_reward, _, _, _ = env_response(config_dict)
 
     avg_vec = []
     agg_err = 0
@@ -54,9 +54,8 @@ for episode_idx in range(NUM_EPISODES):
         config_dict['action_idx'] = action_index
         config_dict['num_pilot_block'] = action_set[action_index]
          
-        if counter % 20 == 0:
+        if counter % PRINT_UPDATE_INTERVAL == 0:
             print(counter, end=', ')
-            
 
         # Observing new env params based on step_params
         config_dict['num_coherence_symbols'] = step_params[0]
@@ -64,7 +63,7 @@ for episode_idx in range(NUM_EPISODES):
         config_dict['snr_tn'] = step_params[2]
 
         # Taking action in that context
-        total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
+        total_reward, _, _, _ = env_response(config_dict)
 
         # Updating q vector q <- q + a ( r - q)
         q_vec[action_index] = q_vec[action_index] + LEARNING_RATE * (total_reward - q_vec[action_index])
@@ -73,10 +72,12 @@ for episode_idx in range(NUM_EPISODES):
         agg_rev = agg_rev + total_reward
         avg_vec = np.append(avg_vec, total_reward)
 
-    avg_error = np.append(avg_error, agg_err / step_list.shape[1])
-    avg_rev = np.append(avg_rev, agg_rev / step_list.shape[1])
+    avg_error.append(agg_err / step_list.shape[1])
+    avg_rev.append(agg_rev / step_list.shape[1])
+
     print('\n', f'avg_err: {agg_err / step_list.shape[1]}, avg_rev: {agg_rev / step_list.shape[1]} ')
     print("-" * 50)
+
     if EPSILON <= 1:
         avg_curve = avg_curve + avg_vec
         all_avg_error = all_avg_error + agg_err / step_list.shape[1]

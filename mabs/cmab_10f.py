@@ -7,22 +7,24 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
+# Epsilon setting
+EPSILON_INIT = 0.99
+EPSILON_MIN = 0
+EPSILON_DECAY = 0.1  # 0.025
+
+NUM_EPISODES = 20  # 100
+PRINT_UPDATE_INTERVAL = 20
+
+# Number of features in the context vector
+NUM_FEATURES = 11
+
 step_list = step_dict['steps_param']
-
 action_set = config_dict['action_set']
-
 number_actions = len(action_set)
 
-# Epsilon setting
-epsilon_init = 0.99
-epsilon_min = 0
-epsilon_decay = 0.1  # 0.025
-
-num_episodes = 20  # 100
 avg_error = []
 avg_rev = []
 
-num_features = 11
 avg_curve = np.zeros(step_list.shape[1])
 
 a_mats = dict()
@@ -31,16 +33,16 @@ theta_vecs = dict()
 x_vecs = dict()
 
 for index_action, action in enumerate(action_set):
-    a_mats[index_action] = np.eye(num_features)
-    b_vecs[index_action] = np.zeros(num_features)
-    theta_vecs[index_action] = np.zeros(num_features)
+    a_mats[index_action] = np.eye(NUM_FEATURES)
+    b_vecs[index_action] = np.zeros(NUM_FEATURES)
+    theta_vecs[index_action] = np.zeros(NUM_FEATURES)
 
 eps_zero_count = 0
 all_avg_error = 0
 
-for episode_idx in range(num_episodes):
+for episode_idx in range(NUM_EPISODES):
 
-    epsilon = max(epsilon_min, epsilon_init - (episode_idx * epsilon_decay))
+    epsilon = max(EPSILON_MIN, EPSILON_INIT - (episode_idx * EPSILON_DECAY))
 
     print(f"Episode: {episode_idx + 1}, Epsilon: {epsilon}")
 
@@ -50,7 +52,7 @@ for episode_idx in range(num_episodes):
     config_dict['num_pilot_block'] = action_set[action_index]
 
     rnd_step_idx = np.random.choice(step_list.shape[1])
-    print(rnd_step_idx)
+
     config_dict['num_coherence_symbols'] = step_list[0][rnd_step_idx]
     config_dict['snr_jn'] = step_list[1][rnd_step_idx]
     config_dict['snr_tn'] = step_list[2][rnd_step_idx]
@@ -77,7 +79,7 @@ for episode_idx in range(num_episodes):
         config_dict['action_idx'] = action_index
         config_dict['num_pilot_block'] = action_set[action_index]
 
-        if counter % 20 == 0:
+        if counter % PRINT_UPDATE_INTERVAL == 0:
             print(counter, end=', ')
 
         # Observing new env params based on step_params
@@ -94,10 +96,10 @@ for episode_idx in range(num_episodes):
 
         agg_err = agg_err + abs(total_reward - est_reward_vec[action_index])
         agg_rev = agg_rev + total_reward
-        avg_vec = np.append(avg_vec, total_reward)
+        avg_vec.append(total_reward)
 
-    avg_error = np.append(avg_error, agg_err / step_list.shape[1])
-    avg_rev = np.append(avg_rev, agg_rev / step_list.shape[1])
+    avg_error.append(agg_err / step_list.shape[1])
+    avg_rev.append(agg_rev / step_list.shape[1])
     print('\n', f'avg_err: {agg_err / step_list.shape[1]}, avg_rev: {agg_rev / step_list.shape[1]} ')
     print("-" * 50)
 
@@ -109,9 +111,8 @@ for episode_idx in range(num_episodes):
 print('total_average_error: ', all_avg_error / eps_zero_count)
 print('total_average_reward: ', np.mean(avg_curve / eps_zero_count))
 
-
 plt.figure(1)
-plt.plot(list(range(num_episodes)), avg_error)
+plt.plot(list(range(NUM_EPISODES)), avg_error)
 plt.xlabel("Episodes")
 plt.ylabel("Average Error")
 plt.grid(True)
@@ -123,7 +124,7 @@ plt.ylabel("Average Error")
 plt.grid(True)
 
 plt.figure(3)
-plt.plot(list(range(num_episodes)), avg_rev)
+plt.plot(list(range(NUM_EPISODES)), avg_rev)
 plt.xlabel("Episodes")
 plt.ylabel("Average Rev")
 plt.grid(True)

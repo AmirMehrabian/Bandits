@@ -4,25 +4,25 @@ from env_simulations.env_functions import env_response
 from utils import epsilon_greedy, model_builder, model_feeder_no_action, context_builder_12features, ReplayBuffer
 import matplotlib.pyplot as plt
 
-buffer_capacity = 5000
-batch_size = 2500
-learning_interval = 10
-epoch = 20
+# Epsilon setting
+EPSILON_INIT = 0.99
+EPSILON_MIN = 0
+EPSILON_DECAY = 0.03
+
+NUM_FEATURES = 11
+
+NUM_EPISODES = 45
+BUFFER_CAPACITY = 5000
+BATCH_SIZE = 2500
+LEARNING_INTERVAL = 10
+EPOCHS = 20
 
 step_list = step_dict['steps_param']
-
 action_set = config_dict['action_set']
-
 number_actions = len(action_set)
-number_context = 11
 
-input_model_size = number_context
-# Epsilon setting
-epsilon_init = 0.99
-epsilon_min = 0
-epsilon_decay = 0.03
+input_model_size = NUM_FEATURES
 
-num_episodes = 45
 avg_error = []
 avg_rev = []
 
@@ -31,16 +31,16 @@ avg_curve = np.zeros(step_list.shape[1])
 model_list = []
 buffers = []
 for index_action, action in enumerate(action_set):
-    model_list.append(model_builder(number_context, 0))
+    model_list.append(model_builder(NUM_FEATURES, 0))
     model_list[index_action].summary()
-    buffers.append(ReplayBuffer(capacity=buffer_capacity, input_model_size=input_model_size))
+    buffers.append(ReplayBuffer(capacity=BUFFER_CAPACITY, input_model_size=input_model_size))
 
 eps_zero_count = 0
 all_avg_error = 0
 
-for episode_index in range(num_episodes):
+for episode_index in range(NUM_EPISODES):
 
-    epsilon = max(epsilon_min, epsilon_init - (episode_index * epsilon_decay))
+    epsilon = max(EPSILON_MIN, EPSILON_INIT - (episode_index * EPSILON_DECAY))
 
     print(f"Episode: {episode_index + 1}, Epsilon: {epsilon}")
 
@@ -95,17 +95,17 @@ for episode_index in range(num_episodes):
 
         agg_err = agg_err + abs(total_reward - est_reward_vec[action_index])
         agg_rev = agg_rev + total_reward
-        avg_vec = np.append(avg_vec, total_reward)
+        avg_vec.append(total_reward)
 
         # Adding data to buffer
         buffer.add_to_buffer(new_input_sample, total_reward.reshape(-1, 1))
 
-        if counter % learning_interval == 0 and counter > 0:
-            batch_input, batch_output = buffer.sample_from_buffer(batch_size)
+        if counter % LEARNING_INTERVAL == 0 and counter > 0:
+            batch_input, batch_output = buffer.sample_from_buffer(BATCH_SIZE)
             model.fit(batch_input, batch_output, epochs=epoch, verbose=False)
 
-    avg_error = np.append(avg_error, agg_err / step_list.shape[1])
-    avg_rev = np.append(avg_rev, agg_rev / step_list.shape[1])
+    avg_error.append(agg_err / step_list.shape[1])
+    avg_rev.append(agg_rev / step_list.shape[1])
 
     print('\n', f'avg_err: {agg_err / step_list.shape[1]}, avg_rev: {agg_rev / step_list.shape[1]} ')
     print("-" * 50)
@@ -116,8 +116,10 @@ for episode_index in range(num_episodes):
         eps_zero_count += 1
 
 print('total_average_error: ', all_avg_error / eps_zero_count)
+print('total_average_reward: ', np.mean(avg_curve / eps_zero_count))
+
 plt.figure(1)
-plt.plot(list(range(num_episodes)), avg_error)
+plt.plot(list(range(NUM_EPISODES)), avg_error)
 plt.xlabel("Episodes")
 plt.ylabel("Average Error")
 plt.grid(True)
@@ -129,9 +131,9 @@ plt.ylabel("Average Error")
 plt.grid(True)
 
 plt.figure(3)
-plt.plot(list(range(num_episodes)), avg_rev)
+plt.plot(list(range(NUM_EPISODES)), avg_rev)
 plt.xlabel("Episodes")
 plt.ylabel("Average Rev")
 plt.grid(True)
 
-print(np.mean(avg_curve / eps_zero_count))
+
