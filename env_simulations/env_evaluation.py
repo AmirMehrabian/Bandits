@@ -5,7 +5,7 @@ from env_simulations.env_functions import env_response
 
 snr_tn_vec = np.arange(-10, 40, 4)
 num_iter = 200
-Pse_vec = []
+prob_sym_error_vec = []
 corr_vec = []
 corr_vec_nb = []
 p_jam_vec = []
@@ -13,7 +13,7 @@ p_signal_vec = []
 
 nb = config_dict['num_pilot_block']
 nd = config_dict['num_data_symbols'] - (config_dict['num_pilot_block'] - 1) * config_dict['num_pilot_symbols']
-print('nd = ', nd)
+
 
 for snr_tn in snr_tn_vec:
     print(snr_tn, end=', ')
@@ -31,15 +31,15 @@ for snr_tn in snr_tn_vec:
         p_jam_agg = p_jam_agg + p_jam
         p_signal_agg = p_signal_agg + p_signal
 
-    Pse_vec = np.append(Pse_vec, agg_error / num_iter)
-    corr_vec = np.append(corr_vec, corr_agg[0] / num_iter)
-    corr_vec_nb = np.append(corr_vec_nb, np.sum(corr_agg[1:]) / (config_dict['num_pilot_block'] * num_iter))
-    p_jam_vec = np.append(p_jam_vec, p_jam_agg / num_iter)
-    p_signal_vec = np.append(p_signal_vec, p_signal_agg / num_iter)
+    prob_sym_error_vec.append(agg_error / num_iter)
+    corr_vec.append(corr_agg[0] / num_iter)
+    corr_vec_nb.append(np.sum(corr_agg[1:]) / (config_dict['num_pilot_block'] * num_iter))
+    p_jam_vec.append(p_jam_agg / num_iter)
+    p_signal_vec.append(p_signal_agg / num_iter)
 
 print(config_dict)
 
-plt.semilogy(snr_tn_vec, Pse_vec)
+plt.semilogy(snr_tn_vec, prob_sym_error_vec)
 plt.xlabel("SNR_s")
 plt.ylabel("Average Error")
 plt.grid(True, which='both')
