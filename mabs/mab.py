@@ -1,7 +1,7 @@
 import numpy as np
 from config import config_dict, step_dict
 from env_simulations.env_functions import env_response
-from utils import epsilon_greedy
+import tqdm
 import matplotlib
 
 matplotlib.use('TkAgg')  # or 'Qt5Agg' or another supported GUI backend
@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 
 NUM_EPISODES = 2
 PRINT_UPDATE_INTERVAL = 20
-EPSILON = config_dict['epsilon_mab'] #0.15
 LEARNING_RATE = 0.3
+EPSILON = config_dict['epsilon_mab']  # 0.15
 
+policy = config_dict['policy']
 step_list = step_dict['steps_param']
 action_set = config_dict['action_set']
 number_actions = len(action_set)
@@ -51,10 +52,10 @@ for episode_idx in range(NUM_EPISODES):
     agg_rev = 0
     for counter, step_params in enumerate(np.array(step_list).T):
 
-        action_index = epsilon_greedy(EPSILON, q_vec)
+        action_index = policy(EPSILON, q_vec)
         config_dict['action_idx'] = action_index
         config_dict['num_pilot_block'] = action_set[action_index]
-         
+
         if counter % PRINT_UPDATE_INTERVAL == 0:
             print(counter, end=', ')
 
@@ -111,3 +112,4 @@ plt.ylabel("Average Rev")
 plt.grid(True)
 
 plt.show()
+

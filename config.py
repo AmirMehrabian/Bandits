@@ -1,5 +1,7 @@
 import numpy as np
 
+from mabs.utils import epsilon_greedy
+
 STEP_REPETITION = 100
 
 config_dict = {
@@ -8,8 +10,8 @@ config_dict = {
     "num_sn": 4,
     "num_antennas": 64,
     # Signal-to-noise ratios
-    "snr_tn": 10,    # in dB
-    "snr_jn": 20,     # in dB
+    "snr_tn": 10,  # in dB
+    "snr_jn": 20,  # in dB
     # Time frames and symbols parameters
     "num_coherence_symbols": 1000,
     "num_pilot_symbols": 20,
@@ -20,6 +22,8 @@ config_dict = {
     "action_set": np.array([1, 2, 5]),
     "action_idx": 1,
     "num_pilot_block": 4,
+    "epsilon_mab": 0.15,
+    "policy": lambda *x: 0,  # epsilon_greedy
 }
 
 step_dict = {}
@@ -51,5 +55,3 @@ step_dict['steps_param'] = np.vstack([
     num_coherence_symbols_frame,
     snr_jn_frame,
     snr_tn_frame])
-
-
