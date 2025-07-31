@@ -7,10 +7,11 @@ import matplotlib
 matplotlib.use('TkAgg')  # or 'Qt5Agg' or another supported GUI backend
 import matplotlib.pyplot as plt
 
-EPSILON = 0.15
-LEARNING_RATE = 0.3
-NUM_EPISODES = 10
+
+NUM_EPISODES = 2
 PRINT_UPDATE_INTERVAL = 20
+EPSILON = config_dict['epsilon_mab'] #0.15
+LEARNING_RATE = 0.3
 
 step_list = step_dict['steps_param']
 action_set = config_dict['action_set']
@@ -86,20 +87,25 @@ for episode_idx in range(NUM_EPISODES):
 print('total_average_rew: ', np.mean(avg_curve / eps_zero_count))
 print('total_average_error: ', all_avg_error / eps_zero_count)
 
+episode_idx = np.arange(NUM_EPISODES)
+
 plt.figure(1)
-plt.plot(list(range(NUM_EPISODES)), avg_error)
+plt.plot(episode_idx, avg_error)
 plt.xlabel("Episodes")
 plt.ylabel("Average Error")
 plt.grid(True)
 
+avg_curve = avg_curve / eps_zero_count
+step_idx = np.arange(step_list.shape[1])
+
 plt.figure(2)
-plt.plot(list(range(step_list.shape[1])), avg_curve / eps_zero_count)
+plt.plot(step_idx, avg_curve)
 plt.xlabel("Steps")
 plt.ylabel("Average Error")
 plt.grid(True)
 
 plt.figure(3)
-plt.plot(list(range(NUM_EPISODES)), avg_rev)
+plt.plot(episode_idx, avg_rev)
 plt.xlabel("Episodes")
 plt.ylabel("Average Rev")
 plt.grid(True)
