@@ -1,25 +1,43 @@
+import os
+import time
 import config
-from mabs import mab
 import logging
 from scipy.io import savemat
 from pprint import pformat
 
-script = mab
-file_name = f"{script.__name__}.mat"
+from mabs import mab as script
+# from mabs import cmab_10f as script
+# from mabs import dcmab_5f as script
 
-plot_info = {
-    "title": "MAB Simulation Results",
+output_dir = "mabs_outputs"
+os.makedirs(output_dir, exist_ok=True)
+
+# === File paths ===
+file_base = script.__name__ + f'_always_nb2'
+mat_path = os.path.join(output_dir, f"{file_base}.mat")
+log_path = os.path.join(output_dir, f"{file_base}.log")
+
+plot_info = {'curves': {
+    'title': f'Simulation Results For {file_base}',
     'rev': script.avg_rev,
     'err': script.avg_error,
     'curve': script.avg_curve,
     'episodes': script.episode_idx,
-    'steps': script.step_idx, }
+    'steps': script.step_idx, },
+    'config': config.config_dict,
+    'episode_param': config.episode_param, }
 
-savemat(file_name, plot_info)
+savemat(mat_path, plot_info, )
 
-logging.basicConfig(filename=f"{script.__name__}.log", level=logging.INFO)
+logging.basicConfig(filename=log_path, level=logging.INFO, filemode='w')
 
-logging.info(f"{script.__name__}\n, pformat(config.config_dict)")
+msg = f''' {'=' * 50} {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())} {'=' * 50}\n
+            Simulation Results For {file_base}\n
+            {pformat(config.config_dict)}\n
+            {pformat(config.episode_param)}\n
+            {'=' * 100} \n '''
+
+logging.info(msg)
 
 
-
+print(config.config_dict)

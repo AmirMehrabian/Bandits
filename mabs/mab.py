@@ -7,10 +7,9 @@ import matplotlib
 matplotlib.use('TkAgg')  # or 'Qt5Agg' or another supported GUI backend
 import matplotlib.pyplot as plt
 
-
-NUM_EPISODES = 2
 PRINT_UPDATE_INTERVAL = 20
-LEARNING_RATE = 0.3
+NUM_EPISODES = config_dict['num_episode_mab']  # 100
+LEARNING_RATE = config_dict['learning_rate_mab']  # 0.3
 EPSILON = config_dict['epsilon_mab']  # 0.15
 
 policy = config_dict['policy']
@@ -112,4 +111,3 @@ plt.ylabel("Average Rev")
 plt.grid(True)
 
 plt.show()
-

@@ -1,11 +1,8 @@
 import numpy as np
-
 from mabs.utils import epsilon_greedy
 
-STEP_REPETITION = 100
-
 config_dict = {
-    # Number of antennas, sensors, and jammers
+    # Number of antennas, sensing nodes (SN), and jamming nodes (JN)
     "num_jn": 1,
     "num_sn": 4,
     "num_antennas": 64,
@@ -21,37 +18,47 @@ config_dict = {
     # Action parameters
     "action_set": np.array([1, 2, 5]),
     "action_idx": 1,
-    "num_pilot_block": 4,
+    "num_pilot_block": 2,
     "epsilon_mab": 0.15,
-    "policy": lambda *x: 0,  # epsilon_greedy
+    "learning_rate_mab": 0.3,
+    "num_episode_mab": 100,
+    "policy": lambda *x: 1,  # epsilon_greedy
+}
+print(config_dict)
+
+PART_SIZE = 100
+EPISODE_PARTS = 5
+
+coherence_per_part = [5000, 3000, 1000, 5000, 3000]
+snr_jn_per_part = [20, 40, 40, 40, 40]
+snr_tn_per_part = [10, 5, 20, 20, 20]
+
+# Initialize empty arrays
+num_coherence_symbols_part = []
+snr_jn_part = []
+snr_tn_part = []
+
+# Fill arrays using a loop
+for i in range(EPISODE_PARTS):
+    num_coherence_symbols_part.extend([coherence_per_part[i]] * PART_SIZE)
+    snr_jn_part.extend([snr_jn_per_part[i]] * PART_SIZE)
+    snr_tn_part.extend([snr_tn_per_part[i]] * PART_SIZE)
+
+# Convert to NumPy arrays
+num_coherence_symbols_part = np.array(num_coherence_symbols_part)
+snr_jn_part = np.array(snr_jn_part)
+snr_tn_part = np.array(snr_tn_part)
+
+episode_param = {
+    'coherence_per_part': coherence_per_part,
+    'snr_jn_per_part': snr_jn_per_part,
+    'snr_tn_per_part': snr_tn_per_part,
+    'part_size': PART_SIZE,
 }
 
-step_dict = {}
-
-num_coherence_symbols_frame = np.concatenate([
-    5000 * np.ones(STEP_REPETITION),
-    3000 * np.ones(STEP_REPETITION),
-    1000 * np.ones(STEP_REPETITION),
-    5000 * np.ones(STEP_REPETITION),
-    3000 * np.ones(STEP_REPETITION)
-])
-snr_jn_frame = np.concatenate([
-    20 * np.ones(STEP_REPETITION),
-    40 * np.ones(STEP_REPETITION),
-    40 * np.ones(STEP_REPETITION),
-    40 * np.ones(STEP_REPETITION),
-    40 * np.ones(STEP_REPETITION)
-])
-
-snr_tn_frame = np.concatenate([
-    10 * np.ones(STEP_REPETITION),
-    5 * np.ones(STEP_REPETITION),
-    20 * np.ones(STEP_REPETITION),
-    20 * np.ones(STEP_REPETITION),
-    20 * np.ones(STEP_REPETITION)
-])
-
-step_dict['steps_param'] = np.vstack([
-    num_coherence_symbols_frame,
-    snr_jn_frame,
-    snr_tn_frame])
+step_dict = {
+    'steps_param': np.vstack([
+        num_coherence_symbols_part,
+        snr_jn_part,
+        snr_tn_part])
+}
