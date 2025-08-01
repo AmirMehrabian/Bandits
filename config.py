@@ -1,4 +1,5 @@
 import numpy as np
+
 from mabs.utils import epsilon_greedy
 
 config_dict = {
@@ -23,6 +24,10 @@ config_dict = {
     "learning_rate_mab": 0.3,
     "num_episode_mab": 100,
     "policy": lambda *x: 1,  # epsilon_greedy
+    "num_episode_cmab": 5,
+    "epsilon_initial": 0.99,
+    "epsilon_min": 0,
+    "epsilon_decay": 0.3,
 }
 print(config_dict)
 
@@ -32,27 +37,32 @@ EPISODE_PARTS = 5
 coherence_per_part = [5000, 3000, 1000, 5000, 3000]
 snr_jn_per_part = [20, 40, 40, 40, 40]
 snr_tn_per_part = [10, 5, 20, 20, 20]
+optimal_actions_idx_per_part = [0, 2, 2, 1, 1]
 
 # Initialize empty arrays
 num_coherence_symbols_part = []
 snr_jn_part = []
 snr_tn_part = []
+optimal_actions_idx = []  # This variable is not used in the provided code, but initialized for completeness
 
 # Fill arrays using a loop
 for i in range(EPISODE_PARTS):
     num_coherence_symbols_part.extend([coherence_per_part[i]] * PART_SIZE)
     snr_jn_part.extend([snr_jn_per_part[i]] * PART_SIZE)
     snr_tn_part.extend([snr_tn_per_part[i]] * PART_SIZE)
+    optimal_actions_idx.extend([optimal_actions_idx_per_part[i]] * PART_SIZE)
 
 # Convert to NumPy arrays
 num_coherence_symbols_part = np.array(num_coherence_symbols_part)
 snr_jn_part = np.array(snr_jn_part)
 snr_tn_part = np.array(snr_tn_part)
+optimal_actions_idx = np.array(optimal_actions_idx)
 
 episode_param = {
     'coherence_per_part': coherence_per_part,
     'snr_jn_per_part': snr_jn_per_part,
     'snr_tn_per_part': snr_tn_per_part,
+    'optimal_actions_idx_per_part': optimal_actions_idx_per_part,
     'part_size': PART_SIZE,
 }
 
@@ -60,5 +70,6 @@ step_dict = {
     'steps_param': np.vstack([
         num_coherence_symbols_part,
         snr_jn_part,
-        snr_tn_part])
+        snr_tn_part]),
+    'optimal_actions_idx_vec': optimal_actions_idx
 }

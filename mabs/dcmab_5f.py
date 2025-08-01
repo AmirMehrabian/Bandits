@@ -6,11 +6,6 @@ from env_simulations.env_functions import env_response
 from mabs.utils import epsilon_greedy, model_builder, model_feeder_no_action, context_builder_5features, ReplayBuffer
 
 # Epsilon setting
-EPSILON_INIT = 0.99
-EPSILON_MIN = 0
-EPSILON_DECAY = 0.1  # 0.03
-NUM_EPISODES = 20  # 45
-
 NUM_FEATURES = 5
 
 BUFFER_CAPACITY = 5000
@@ -20,16 +15,26 @@ EPOCHS = 20
 
 PRINT_UPDATE_INTERVAL = 20
 
+# Epsilon setting
+EPSILON_INIT = config_dict['epsilon_initial']  # 0.99
+EPSILON_MIN = config_dict['epsilon_min']  # 0
+EPSILON_DECAY = config_dict['epsilon_decay']  # 0.03
+
+NUM_EPISODES = config_dict['num_episode_cmab']
+
 step_list = step_dict['steps_param']
 action_set = config_dict['action_set']
+optimal_actions_idx_vec = step_dict['optimal_actions_idx_vec']
 number_actions = len(action_set)
 
 input_model_size = NUM_FEATURES
 
 avg_error = []
 avg_rev = []
+avg_opt_act = []
 
 avg_curve = np.zeros(step_list.shape[1])
+avg_opt_curve = np.zeros(step_list.shape[1])
 
 model_list = []
 buffers = []
@@ -64,8 +69,10 @@ for episode_index in trange(NUM_EPISODES, desc="Training"):
     context = context_builder_5features(corr_vec, power_jn_db, power_tn_db)
 
     avg_vec = []
+    avg_opt_vec = []
     agg_err = 0
     agg_rev = 0
+    agg_optimal_action = 0
 
     for counter, step_params in enumerate(np.array(step_list).T):
 
@@ -96,9 +103,14 @@ for episode_index in trange(NUM_EPISODES, desc="Training"):
         model = model_list[action_index]
         buffer = buffers[action_index]
 
+        is_optimal = 1 if optimal_actions_idx_vec[counter] == action_index else 0
+
         agg_err = agg_err + abs(total_reward - est_reward_vec[action_index])
         agg_rev = agg_rev + total_reward
+        agg_optimal_action = agg_optimal_action + is_optimal
+
         avg_vec.append(total_reward)
+        avg_opt_vec.append(is_optimal)
 
         # Adding data to buffer
         buffer.add_to_buffer(new_input_sample, total_reward.reshape(-1, 1))
@@ -112,34 +124,63 @@ for episode_index in trange(NUM_EPISODES, desc="Training"):
 
     avg_error.append(agg_err / step_list.shape[1])
     avg_rev.append(agg_rev / step_list.shape[1])
+    avg_opt_act.append(agg_optimal_action / step_list.shape[1])
 
-    print('\n', f'avg_err: {agg_err / step_list.shape[1]}, avg_rev: {agg_rev / step_list.shape[1]} ')
+    print('\n', f'avg_err: {agg_err / step_list.shape[1]} ',
+          f'avg_rev: {agg_rev / step_list.shape[1]} ',
+          f'avg_opt_act: {agg_optimal_action / step_list.shape[1]} ')
     print("-" * 50)
 
     if epsilon <= 0.0001:
         avg_curve = avg_curve + avg_vec
+        avg_opt_curve = avg_opt_curve + avg_opt_vec
         all_avg_error = all_avg_error + agg_err / step_list.shape[1]
         eps_zero_count += 1
 
-print('total_average_error: ', all_avg_error / eps_zero_count)
-print('total_average_reward: ',np.mean(avg_curve / eps_zero_count))
+final_avg_rev = np.mean(avg_curve / eps_zero_count)
+final_avg_opt_act = np.mean(avg_opt_curve / eps_zero_count)
+final_avg_error = all_avg_error / eps_zero_count
+
+print('total_average_rew: ', final_avg_rev)
+print('total_average_opt_act: ', final_avg_opt_act)
+print('total_average_error: ', final_avg_error)
+
+
+episode_idx = np.arange(NUM_EPISODES)
 
 plt.figure(1)
-plt.plot(list(range(NUM_EPISODES)), avg_error)
+plt.plot(episode_idx, avg_error)
 plt.xlabel("Episodes")
 plt.ylabel("Average Error")
 plt.grid(True)
 
+avg_curve = avg_curve / eps_zero_count
+step_idx = np.arange(step_list.shape[1])
+
 plt.figure(2)
-plt.plot(list(range(step_list.shape[1])), avg_curve / eps_zero_count)
+plt.plot(step_idx, avg_curve)
 plt.xlabel("Steps")
 plt.ylabel("Average Error")
 plt.grid(True)
 
+avg_opt_curve = avg_opt_curve / eps_zero_count
+
 plt.figure(3)
-plt.plot(list(range(NUM_EPISODES)), avg_rev)
+plt.plot(step_idx, 100 * avg_opt_curve)
+plt.xlabel("Steps")
+plt.ylabel("Optimial_action_Selection (%)")
+plt.grid(True)
+
+plt.figure(4)
+plt.plot(episode_idx, avg_rev)
 plt.xlabel("Episodes")
 plt.ylabel("Average Rev")
+plt.grid(True)
+
+plt.figure(5)
+plt.plot(episode_idx, avg_opt_act)
+plt.xlabel("Episodes")
+plt.ylabel("Optimial_action_Selection")
 plt.grid(True)
 
 plt.show()

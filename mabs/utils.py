@@ -28,7 +28,7 @@ def context_builder_5features(corr_vec, power_jn_db, power_tn_db):
     return np.array([np.abs(corr_vec)[0], power_jn_db, power_tn_db, phi_vec[0], phi_vec[0] * 90])
 
 
-def context_builder_12features(corr_vec, power_jn_db, power_tn_db, index_action, config_dict):
+def context_builder_10features(corr_vec, power_jn_db, power_tn_db, index_action, config_dict):
     action = config_dict['action_set'][index_action]
     max_reward = config_dict['num_data_symbols'] - ((action - 1) * config_dict['num_pilot_symbols'])
     max_reward_norm = max_reward / config_dict['num_data_symbols']

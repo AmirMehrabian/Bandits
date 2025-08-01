@@ -23,9 +23,15 @@ plot_info = {'curves': {
     'err': script.avg_error,
     'curve': script.avg_curve,
     'episodes': script.episode_idx,
-    'steps': script.step_idx, },
+    'steps': script.step_idx,
+    'opt_act': script.avg_opt_act,
+    'final_avg_rev': script.final_avg_rev,
+    'final_avg_opt_act': script.final_avg_opt_act,
+    'final_avg_error': script.final_avg_error,
+    },
     'config': config.config_dict,
-    'episode_param': config.episode_param, }
+    'episode_param': config.episode_param,
+    }
 
 savemat(mat_path, plot_info, )
 
