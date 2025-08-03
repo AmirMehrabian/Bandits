@@ -5,15 +5,16 @@ import logging
 from scipy.io import savemat
 from pprint import pformat
 
-from mabs import mab as script
-# from mabs import cmab_10f as script
-# from mabs import dcmab_5f as script
+#from mabs import mab as script
+#from mabs import cmab_10f as script
+#from mabs import dcmab_5f as script
+from mabs import dcmab_10f as script
 
 output_dir = "mabs_outputs"
 os.makedirs(output_dir, exist_ok=True)
 
 # === File paths ===
-file_base = script.__name__ + f'_always_nb2'
+file_base = script.__name__ + f''
 mat_path = os.path.join(output_dir, f"{file_base}.mat")
 log_path = os.path.join(output_dir, f"{file_base}.log")
 

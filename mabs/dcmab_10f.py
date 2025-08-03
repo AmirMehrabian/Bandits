@@ -5,7 +5,7 @@ from utils import epsilon_greedy, model_builder, model_feeder_no_action, context
 import matplotlib.pyplot as plt
 
 # Epsilon setting
-NUM_FEATURES = 5
+NUM_FEATURES = 11
 
 BUFFER_CAPACITY = 5000
 BATCH_SIZE = 2500
@@ -106,7 +106,7 @@ for episode_index in range(NUM_EPISODES):
 
         agg_err = agg_err + abs(total_reward - est_reward_vec[action_index])
         agg_rev = agg_rev + total_reward
-        avg_vec.append(total_reward)
+        agg_optimal_action = agg_optimal_action + is_optimal
 
         avg_vec.append(total_reward)
         avg_opt_vec.append(is_optimal)
@@ -119,6 +119,7 @@ for episode_index in range(NUM_EPISODES):
             model.fit(batch_input, batch_output, epochs=EPOCHS, verbose=False)
 
     avg_error.append(agg_err / step_list.shape[1])
+    avg_rev.append(agg_rev / step_list.shape[1])
     avg_opt_act.append(agg_optimal_action / step_list.shape[1])
 
     print('\n', f'avg_err: {agg_err / step_list.shape[1]} ',

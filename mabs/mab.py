@@ -93,7 +93,7 @@ for episode_idx in range(NUM_EPISODES):
 
     print("-" * 50)
 
-    if EPSILON <= 1:
+    if EPSILON <= 1.5:
         avg_curve = avg_curve + avg_vec
         avg_opt_curve = avg_opt_curve + avg_opt_vec
         all_avg_error = all_avg_error + agg_err / step_list.shape[1]
