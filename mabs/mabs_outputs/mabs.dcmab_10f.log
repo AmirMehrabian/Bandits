@@ -1,25 +1,25 @@
-INFO:root: ================================================== 2025-08-03 01:52:27 ==================================================
+INFO:root: ================================================== 2025-08-04 09:41:13 ==================================================
 
             Simulation Results For mabs.dcmab_10f
 
             {'action_idx': np.int64(1),
  'action_set': array([1, 2, 5]),
  'epsilon_decay': 0.02,
- 'epsilon_initial': 0,
- 'epsilon_mab': 0.02,
+ 'epsilon_initial': 0.99,
+ 'epsilon_mab': 0.1,
  'epsilon_min': 0,
  'learning_rate_mab': 0.3,
  'nakagami_shape_param': 2.0,
  'num_antennas': 64,
  'num_coherence_symbols': np.int64(3000),
  'num_data_symbols': 500,
- 'num_episode_cmab': 1,
+ 'num_episode_cmab': 100,
  'num_episode_mab': 100,
  'num_jn': 1,
  'num_pilot_block': np.int64(2),
  'num_pilot_symbols': 20,
  'num_sn': 4,
- 'policy': <function epsilon_greedy at 0x733e60033c40>,
+ 'policy': <function epsilon_greedy at 0x74eed9e4fc40>,
  'snr_jn': np.int64(40),
  'snr_tn': np.int64(20)}
 
