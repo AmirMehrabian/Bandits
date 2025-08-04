@@ -1,0 +1,33 @@
+INFO:root: ================================================== 2025-08-04 16:22:10 ==================================================
+
+            Simulation Results For mabs.mab_nb1
+
+            {'action_idx': 0,
+ 'action_set': array([1, 2, 5]),
+ 'epsilon_decay': 0.02,
+ 'epsilon_initial': 0.99,
+ 'epsilon_mab': 0.1,
+ 'epsilon_min': 0,
+ 'learning_rate_mab': 0.3,
+ 'nakagami_shape_param': 2.0,
+ 'num_antennas': 64,
+ 'num_coherence_symbols': np.int64(1000),
+ 'num_data_symbols': 500,
+ 'num_episode_cmab': 100,
+ 'num_episode_mab': 100,
+ 'num_jn': 1,
+ 'num_pilot_block': np.int64(1),
+ 'num_pilot_symbols': 20,
+ 'num_sn': 8,
+ 'policy': <function <lambda> at 0x7c921bec2b60>,
+ 'snr_jn': np.int64(40),
+ 'snr_tn': np.int64(5)}
+
+            {'coherence_per_part': [5000, 3000, 1000],
+ 'optimal_actions_idx_per_part': [0, 2, 2],
+ 'part_size': 100,
+ 'snr_jn_per_part': [20, 40, 40],
+ 'snr_tn_per_part': [20, 15, 5]}
+
+            ==================================================================================================== 
+ 
