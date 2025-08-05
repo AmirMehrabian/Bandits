@@ -10,7 +10,7 @@ from pprint import pformat
 #from mabs import dcmab_5f as script
 from mabs import dcmab_10f as script
 
-output_dir = "mabs_outputs"
+output_dir = "mabs_outputs_sen3_mnak_2"
 os.makedirs(output_dir, exist_ok=True)
 
 # === File paths ===

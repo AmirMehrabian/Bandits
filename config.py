@@ -18,26 +18,26 @@ config_dict = {
     "nakagami_shape_param": 2.0,
     # Action parameters
     "action_set": np.array([1, 2, 5]),
-    "action_idx": 1,
-    "num_pilot_block": 2,
-    "epsilon_mab": 0.15,
-    "learning_rate_mab": 0.3,
+    "action_idx": 2,
+    "num_pilot_block": 5,
+    "epsilon_mab": 0.2,
+    "learning_rate_mab": 0.3,  # 0.3,
     "num_episode_mab": 100,
-    "policy": lambda *x: 1,  # epsilon_greedy
-    "num_episode_cmab": 5,
+    "policy": epsilon_greedy,  # epsilon_greedy, #lambda *x: 2,  # epsilon_greedy
+    "num_episode_cmab": 50,
     "epsilon_initial": 0.99,
     "epsilon_min": 0,
-    "epsilon_decay": 0.3,
+    "epsilon_decay": 0.1,
 }
 print(config_dict)
 
-PART_SIZE = 100
-EPISODE_PARTS = 5
+PART_SIZE = 50  # 100
+EPISODE_PARTS = 3
 
-coherence_per_part = [5000, 3000, 1000, 5000, 3000]
-snr_jn_per_part = [20, 40, 40, 40, 40]
-snr_tn_per_part = [10, 5, 20, 20, 20]
-optimal_actions_idx_per_part = [0, 2, 2, 1, 1]
+coherence_per_part = [1000, 3000, 5000]  # [5000, 3000, 1000, 5000, 3000]
+snr_jn_per_part = [40, 40, 40]  # [20, 40, 40, 40, 40]
+snr_tn_per_part = [15, 15, 15]  # [10, 5, 20, 20, 20]
+optimal_actions_idx_per_part = [2, 2, 1]  # [0, 2, 2, 1, 1]
 
 # Initialize empty arrays
 num_coherence_symbols_part = []
