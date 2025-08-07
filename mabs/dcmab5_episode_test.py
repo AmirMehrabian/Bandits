@@ -1,0 +1,194 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import trange
+from config import config_dict, step_dict
+from env_simulations.env_functions import env_response
+from mabs.utils import epsilon_greedy, model_builder, model_feeder_no_action, context_builder_5features, ReplayBuffer
+
+# Epsilon setting
+NUM_FEATURES = 5
+
+BUFFER_CAPACITY = 5000
+BATCH_SIZE = 2500
+LEARNING_INTERVAL = 10
+EPOCHS = 20
+
+PRINT_UPDATE_INTERVAL = 20
+
+# Epsilon setting
+
+
+NUM_EPISODES = config_dict['num_episode_cmab']
+
+step_list = step_dict['steps_param']
+action_set = config_dict['action_set']
+optimal_actions_idx_vec = step_dict['optimal_actions_idx_vec']
+number_actions = len(action_set)
+
+input_model_size = NUM_FEATURES
+NUM_ITER = 10
+# 100
+num_train_vec = [1, 2, 4, 6, 8, 10]
+
+final_avg_error_vec = []
+final_avg_opt_act_vec = []
+final_avg_rev_vec = []
+
+for num_train in num_train_vec:
+    epsilon_vec = np.ones(num_train) - np.arange(num_train) / num_train
+    epsilon_vec = np.concatenate([epsilon_vec, np.zeros(1)])
+    print('num_train: ', num_train, epsilon_vec)
+    NUM_EPISODES = len(epsilon_vec)
+    agg_final_avg_rev = 0
+    agg_final_avg_opt_act = 0
+    agg_final_avg_error = 0
+
+    for iter_idx in range(NUM_ITER):
+        print('Iter: ', iter_idx + 1, end=' - ')
+        avg_error = []
+        avg_rev = []
+        avg_opt_act = []
+
+        avg_curve = np.zeros(step_list.shape[1])
+        avg_opt_curve = np.zeros(step_list.shape[1])
+
+        model_list = []
+        buffers = []
+
+        for index_action, action in enumerate(action_set):
+            model_list.append(model_builder(NUM_FEATURES, 0))
+            #model_list[index_action].summary()
+            buffers.append(ReplayBuffer(capacity=BUFFER_CAPACITY, input_model_size=input_model_size))
+
+        eps_zero_count = 0
+        all_avg_error = 0
+
+        for epsilon_idx, episode_index in enumerate(range(NUM_EPISODES)):
+
+            epsilon = epsilon_vec[epsilon_idx]
+
+            print(f"Episode: {episode_index + 1}, Epsilon: {epsilon}")
+
+            # Randomly selecting the action and first episode
+            action_index = np.random.choice(number_actions)
+            config_dict['action_idx'] = action_index
+            config_dict['num_pilot_block'] = action_set[action_index]
+
+            rnd_step_idx = np.random.choice(step_list.shape[1])
+
+            config_dict['num_coherence_symbols'] = step_list[0][rnd_step_idx]
+            config_dict['snr_jn'] = step_list[1][rnd_step_idx]
+            config_dict['snr_tn'] = step_list[2][rnd_step_idx]
+
+            # Initialize the first context
+            total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
+            context = context_builder_5features(corr_vec, power_jn_db, power_tn_db)
+
+            avg_vec = []
+            avg_opt_vec = []
+            agg_err = 0
+            agg_rev = 0
+            agg_optimal_action = 0
+
+            for counter, step_params in enumerate(np.array(step_list).T):
+
+                est_reward_vec = []
+
+                for index_action, action in enumerate(action_set):
+                    model = model_list[index_action]
+                    model_input = model_feeder_no_action(context)
+                    model_output = model.predict(model_input, verbose=False)
+                    est_reward_vec = np.append(est_reward_vec, model_output.reshape(-1))
+
+                action_index = epsilon_greedy(epsilon, est_reward_vec)
+                config_dict['action_index'] = action_index
+                config_dict['num_pilot_block'] = action_set[action_index]
+
+                #if counter % PRINT_UPDATE_INTERVAL == 0:
+                    #print(counter, end=', ')
+
+                # Observing new env params based on step_params
+                config_dict['num_coherence_symbols'] = step_params[0]
+                config_dict['snr_jn'] = step_params[1]
+                config_dict['snr_tn'] = step_params[2]
+
+                # taking action in that context
+                total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
+
+                new_input_sample = model_feeder_no_action(context)
+                model = model_list[action_index]
+                buffer = buffers[action_index]
+
+                is_optimal = 1 if optimal_actions_idx_vec[counter] == action_index else 0
+
+                agg_err = agg_err + abs(total_reward - est_reward_vec[action_index])
+                agg_rev = agg_rev + total_reward
+                agg_optimal_action = agg_optimal_action + is_optimal
+
+                avg_vec.append(total_reward)
+                avg_opt_vec.append(is_optimal)
+
+                # Adding data to buffer
+                buffer.add_to_buffer(new_input_sample, total_reward.reshape(-1, 1))
+
+                # Observing new context
+                context = context_builder_5features(corr_vec, power_jn_db, power_tn_db)
+
+                if counter % LEARNING_INTERVAL == 0 and counter > 0:
+                    if epsilon > 0:
+                        batch_input, batch_output = buffer.sample_from_buffer(BATCH_SIZE)
+                        model.fit(batch_input, batch_output, epochs=EPOCHS, verbose=False)
+                    else:
+                        print("Skipping learning step as epsilon is zero.")
+
+            avg_error.append(agg_err / step_list.shape[1])
+            avg_rev.append(agg_rev / step_list.shape[1])
+            avg_opt_act.append(agg_optimal_action / step_list.shape[1])
+
+            print('\n', f'avg_err: {agg_err / step_list.shape[1]} ',
+                  f'avg_rev: {agg_rev / step_list.shape[1]} ',
+                  f'avg_opt_act: {agg_optimal_action / step_list.shape[1]} ')
+            print("-" * 50)
+
+            if epsilon <= 0.0001:
+                avg_curve = avg_curve + avg_vec
+                avg_opt_curve = avg_opt_curve + avg_opt_vec
+                all_avg_error = all_avg_error + agg_err / step_list.shape[1]
+                eps_zero_count += 1
+
+        final_avg_rev = np.mean(avg_curve / eps_zero_count)
+        agg_final_avg_rev = agg_final_avg_rev + final_avg_rev
+        final_avg_opt_act = np.mean(avg_opt_curve / eps_zero_count)
+        agg_final_avg_opt_act = agg_final_avg_opt_act + final_avg_opt_act
+        final_avg_error = all_avg_error / eps_zero_count
+        agg_final_avg_error = agg_final_avg_error + final_avg_error
+
+    final_avg_rev_vec.append(agg_final_avg_rev / NUM_ITER)
+    final_avg_opt_act_vec.append(agg_final_avg_opt_act / NUM_ITER)
+    final_avg_error_vec.append(agg_final_avg_error / NUM_ITER)
+
+    print('\n', '-' * 100, '\n', 'total_average_rew: ', agg_final_avg_rev / NUM_ITER)
+    print('total_average_opt_act: ', agg_final_avg_opt_act / NUM_ITER)
+    print('total_average_error: ', agg_final_avg_error / NUM_ITER)
+
+episode_idx = np.arange(NUM_EPISODES)
+
+plt.figure(1)
+plt.plot(num_train_vec, final_avg_rev_vec)
+plt.xlabel("Number of Training Episodes")
+plt.ylabel("Average Reward")
+plt.grid(True)
+
+plt.figure(2)
+plt.plot(num_train_vec, final_avg_opt_act_vec)
+plt.xlabel("Number of Training Episodes")
+plt.ylabel("Optimial_action_Selection (%)")
+plt.grid(True)
+
+plt.figure(3)
+plt.plot(num_train_vec, final_avg_error_vec)
+plt.xlabel("Number of Training Episodes")
+plt.ylabel("Average Error")
+plt.grid(True)
+
+plt.show()
