@@ -34,13 +34,14 @@ print(config_dict)
 PART_SIZE = 50  # 100
 EPISODE_PARTS = 3
 
-coherence_per_part = [1000, 3000, 5000]  # [5000, 3000, 1000, 5000, 3000]
-snr_jn_per_part = [40, 40, 40]  # [20, 40, 40, 40, 40]
-snr_tn_per_part = [15, 15, 15]  # [10, 5, 20, 20, 20]
-optimal_actions_idx_per_part = [2, 2, 1]  # [0, 2, 2, 1, 1]
+coherence_per_part = [5000, 3000, 5000]  # [1000, 3000, 5000]  # [5000, 3000, 1000, 5000, 3000]
+snr_jn_per_part = [20, 40, 40]  # [40, 40, 40]  # [20, 40, 40, 40, 40]
+snr_tn_per_part = [10, 5, 20]  # [15, 15, 15]  # [10, 5, 20, 20, 20]
+optimal_actions_idx_per_part = [0, 2, 1]  # [2, 2, 1]  # [0, 2, 2, 1, 1]
 
 # Initialize empty arrays
 num_coherence_symbols_part = []
+
 snr_jn_part = []
 snr_tn_part = []
 optimal_actions_idx = []  # This variable is not used in the provided code, but initialized for completeness

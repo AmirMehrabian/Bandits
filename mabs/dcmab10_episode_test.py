@@ -1,12 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from tqdm import trange
 from config import config_dict, step_dict
 from env_simulations.env_functions import env_response
-from mabs.utils import epsilon_greedy, model_builder, model_feeder_no_action, context_builder_5features, ReplayBuffer
+from utils import epsilon_greedy, model_builder, model_feeder_no_action, context_builder_10features, ReplayBuffer
+import matplotlib.pyplot as plt
 
 # Epsilon setting
-NUM_FEATURES = 5
+NUM_FEATURES = 11
 
 BUFFER_CAPACITY = 5000
 BATCH_SIZE = 2500
@@ -57,7 +56,7 @@ for num_train in num_train_vec:
 
         for index_action, action in enumerate(action_set):
             model_list.append(model_builder(NUM_FEATURES, 0))
-            # model_list[index_action].summary()
+            #model_list[index_action].summary()
             buffers.append(ReplayBuffer(capacity=BUFFER_CAPACITY, input_model_size=input_model_size))
 
         eps_zero_count = 0
@@ -82,7 +81,6 @@ for num_train in num_train_vec:
 
             # Initialize the first context
             total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
-            context = context_builder_5features(corr_vec, power_jn_db, power_tn_db)
 
             avg_vec = []
             avg_opt_vec = []
@@ -95,17 +93,18 @@ for num_train in num_train_vec:
                 est_reward_vec = []
 
                 for index_action, action in enumerate(action_set):
+                    context = context_builder_10features(corr_vec, power_jn_db, power_tn_db, index_action, config_dict)
                     model = model_list[index_action]
                     model_input = model_feeder_no_action(context)
                     model_output = model.predict(model_input, verbose=False)
                     est_reward_vec = np.append(est_reward_vec, model_output.reshape(-1))
 
                 action_index = epsilon_greedy(epsilon, est_reward_vec)
-                config_dict['action_index'] = action_index
+                config_dict['action_idx'] = action_index
                 config_dict['num_pilot_block'] = action_set[action_index]
 
                 # if counter % PRINT_UPDATE_INTERVAL == 0:
-                # print(counter, end=', ')
+                #     print(counter, end=', ')
 
                 # Observing new env params based on step_params
                 config_dict['num_coherence_symbols'] = step_params[0]
@@ -114,6 +113,8 @@ for num_train in num_train_vec:
 
                 # taking action in that context
                 total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
+
+                context = context_builder_10features(corr_vec, power_jn_db, power_tn_db, action_index, config_dict)
 
                 new_input_sample = model_feeder_no_action(context)
                 model = model_list[action_index]
@@ -130,9 +131,6 @@ for num_train in num_train_vec:
 
                 # Adding data to buffer
                 buffer.add_to_buffer(new_input_sample, total_reward.reshape(-1, 1))
-
-                # Observing new context
-                context = context_builder_5features(corr_vec, power_jn_db, power_tn_db)
 
                 if counter % LEARNING_INTERVAL == 0 and counter > 0:
                     if epsilon > 0:
