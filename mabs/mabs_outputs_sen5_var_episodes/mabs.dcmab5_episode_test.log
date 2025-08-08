@@ -1,9 +1,9 @@
-INFO:root: ================================================== 2025-08-07 16:30:53 ==================================================
+INFO:root: ================================================== 2025-08-08 10:54:45 ==================================================
 
             Simulation Results For mabs.dcmab5_episode_test
 
-            {'action_idx': 2,
- 'action_index': np.int64(0),
+            {'action_idx': 1,
+ 'action_index': np.int64(1),
  'action_set': array([1, 2, 5]),
  'epsilon_decay': 0.1,
  'epsilon_initial': 0.99,
@@ -17,10 +17,10 @@ INFO:root: ================================================== 2025-08-07 16:30:5
  'num_episode_cmab': 50,
  'num_episode_mab': 100,
  'num_jn': 1,
- 'num_pilot_block': np.int64(1),
+ 'num_pilot_block': np.int64(2),
  'num_pilot_symbols': 20,
  'num_sn': 4,
- 'policy': <function epsilon_greedy at 0x0000022912AD8940>,
+ 'policy': <function epsilon_greedy at 0x7c848eda7c40>,
  'snr_jn': np.int64(40),
  'snr_tn': np.int64(20)}
 

@@ -1,4 +1,4 @@
-INFO:root: ================================================== 2025-08-06 23:25:00 ==================================================
+INFO:root: ================================================== 2025-08-08 18:59:48 ==================================================
 
             Simulation Results For mabs.dcmab_10f
 
@@ -8,8 +8,8 @@ INFO:root: ================================================== 2025-08-06 23:25:0
  'epsilon_initial': 0.99,
  'epsilon_mab': 0.2,
  'epsilon_min': 0,
- 'learning_rate_mab': 0.5,
- 'nakagami_shape_param': 5.0,
+ 'learning_rate_mab': 0.3,
+ 'nakagami_shape_param': 2.0,
  'num_antennas': 64,
  'num_coherence_symbols': np.int64(5000),
  'num_data_symbols': 500,
@@ -19,15 +19,15 @@ INFO:root: ================================================== 2025-08-06 23:25:0
  'num_pilot_block': np.int64(2),
  'num_pilot_symbols': 20,
  'num_sn': 4,
- 'policy': <function epsilon_greedy at 0x7b899133fce0>,
+ 'policy': <function epsilon_greedy at 0x77863a613c40>,
  'snr_jn': np.int64(40),
- 'snr_tn': np.int64(18)}
+ 'snr_tn': np.int64(20)}
 
-            {'coherence_per_part': [1000, 3000, 5000],
- 'optimal_actions_idx_per_part': [2, 2, 1],
+            {'coherence_per_part': [5000, 3000, 5000],
+ 'optimal_actions_idx_per_part': [0, 2, 1],
  'part_size': 50,
- 'snr_jn_per_part': [40, 40, 40],
- 'snr_tn_per_part': [18, 18, 18]}
+ 'snr_jn_per_part': [20, 40, 40],
+ 'snr_tn_per_part': [10, 5, 20]}
 
             ==================================================================================================== 
  
