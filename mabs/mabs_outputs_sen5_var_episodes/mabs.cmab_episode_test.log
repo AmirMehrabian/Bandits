@@ -1,4 +1,4 @@
-INFO:root: ================================================== 2025-08-07 15:58:49 ==================================================
+INFO:root: ================================================== 2025-08-09 01:57:24 ==================================================
 
             Simulation Results For mabs.cmab_episode_test
 
@@ -19,7 +19,7 @@ INFO:root: ================================================== 2025-08-07 15:58:4
  'num_pilot_block': np.int64(2),
  'num_pilot_symbols': 20,
  'num_sn': 4,
- 'policy': <function epsilon_greedy at 0x0000026DA98AA940>,
+ 'policy': <function epsilon_greedy at 0x787cc6b8bc40>,
  'snr_jn': np.int64(40),
  'snr_tn': np.int64(20)}
 
