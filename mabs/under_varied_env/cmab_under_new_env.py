@@ -1,39 +1,63 @@
 import numpy as np
 from config import config_dict, step_dict
 from env_simulations.env_functions import env_response
-import tqdm
+from mabs.utils import epsilon_greedy, context_builder_10features
 import matplotlib
-from mabs.under_varied_env import new_env_config
-matplotlib.use('TkAgg')  # or 'Qt5Agg' or another supported GUI backend
+import copy
+import new_env_config
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
+# 100
 PRINT_UPDATE_INTERVAL = 20
-NUM_EPISODES = config_dict['num_episode_mab']  # 100
-LEARNING_RATE = config_dict['learning_rate_mab']  # 0.3
-EPSILON = config_dict['epsilon_mab']  # 0.15
+# Number of features in the context vector
+NUM_FEATURES = 11
+# Epsilon setting
+EPSILON_INIT = config_dict['epsilon_initial']  # 0.99
+EPSILON_MIN = config_dict['epsilon_min']  # 0
+EPSILON_DECAY = config_dict['epsilon_decay']  # 0.03
 
-policy = config_dict['policy']
-step_list = new_env_config.step_dict['steps_param'] #step_dict['steps_param']
+NUM_EPISODES = config_dict['num_episode_cmab']
+step_list = step_dict['steps_param']
 action_set = config_dict['action_set']
-optimal_actions_idx_vec =  new_env_config.step_dict['optimal_actions_idx_vec'] #step_dict['optimal_actions_idx_vec']
+optimal_actions_idx_vec = step_dict['optimal_actions_idx_vec']
 number_actions = len(action_set)
 
 avg_error = []
 avg_rev = []
 avg_opt_act = []
 
-avg_curve = np.zeros(step_list.shape[1])
-avg_opt_curve = np.zeros(step_list.shape[1])
+avg_curve = np.zeros(new_env_config.step_dict['steps_param'].shape[1])
+avg_opt_curve = np.zeros(new_env_config.step_dict['steps_param'].shape[1])
 
-q_vec = np.zeros(number_actions)
+a_mats = dict()
+b_vecs = dict()
+theta_vecs = dict()
+x_vecs = dict()
+
+for index_action, action in enumerate(action_set):
+    a_mats[index_action] = np.eye(NUM_FEATURES)
+    b_vecs[index_action] = np.zeros(NUM_FEATURES)
+    theta_vecs[index_action] = np.zeros(NUM_FEATURES)
 
 eps_zero_count = 0
 all_avg_error = 0
 
+new_config = copy.deepcopy(config_dict)
+print(new_config)
+online_learning = True
 for episode_idx in range(NUM_EPISODES):
 
-    q_vec = np.zeros(number_actions)
-    print(f"Episode: {episode_idx + 1}, Epsilon: {EPSILON}")
+    epsilon = max(EPSILON_MIN, EPSILON_INIT - (episode_idx * EPSILON_DECAY))
+    print('A 0 0 is : ',a_mats[0][0][0])
+    if epsilon <= 0.0001:
+        step_list = new_env_config.step_dict['steps_param']
+        #online_learning = False
+        optimal_actions_idx_vec = new_env_config.step_dict['optimal_actions_idx_vec']
+        print(new_env_config.coherence_per_part)
+
+
+    print(f"Episode: {episode_idx + 1}, Epsilon: {epsilon}")
 
     # Randomly selecting the action and first episode
     action_index = np.random.choice(number_actions)
@@ -47,7 +71,7 @@ for episode_idx in range(NUM_EPISODES):
     config_dict['snr_tn'] = step_list[2][rnd_step_idx]
 
     # Initialize the first context
-    total_reward, _, _, _ = env_response(config_dict)
+    total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
 
     avg_vec = []
     avg_opt_vec = []
@@ -56,7 +80,17 @@ for episode_idx in range(NUM_EPISODES):
     agg_optimal_action = 0
     for counter, step_params in enumerate(np.array(step_list).T):
 
-        action_index = policy(EPSILON, q_vec)
+        est_reward_vec = np.zeros(number_actions)
+        for index_action, action in enumerate(action_set):
+            x_vecs[index_action] = context_builder_10features(corr_vec, power_jn_db, power_tn_db, index_action,
+                                                              config_dict)
+
+            theta_vecs[index_action] = np.linalg.pinv(a_mats[index_action]) @ b_vecs[index_action]  # Q = A^(-1) b
+            est_reward_vec[index_action] = x_vecs[index_action] @ theta_vecs[index_action]  # r = Q^T x
+            est = x_vecs[index_action] @ theta_vecs[index_action]
+            est2 = x_vecs[index_action].T @ theta_vecs[index_action]
+
+        action_index = epsilon_greedy(epsilon, est_reward_vec)
         config_dict['action_idx'] = action_index
         config_dict['num_pilot_block'] = action_set[action_index]
 
@@ -68,15 +102,17 @@ for episode_idx in range(NUM_EPISODES):
         config_dict['snr_jn'] = step_params[1]
         config_dict['snr_tn'] = step_params[2]
 
-        # Taking action in that context
-        total_reward, _, _, _ = env_response(config_dict)
+        total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
+        outer_x = np.outer(x_vecs[action_index], x_vecs[action_index])
 
-        # Updating q vector q <- q + a ( r - q)
-        q_vec[action_index] = q_vec[action_index] + LEARNING_RATE * (total_reward - q_vec[action_index])
+        if online_learning:
+        # Updating the A and b
+            a_mats[action_index] = a_mats[action_index] + outer_x  # A <- A + xx^T
+            b_vecs[action_index] = b_vecs[action_index] + total_reward * x_vecs[action_index]  # b <- b + r x
 
         is_optimal = 1 if optimal_actions_idx_vec[counter] == action_index else 0
 
-        agg_err = agg_err + abs(total_reward - q_vec[action_index])
+        agg_err = agg_err + abs(total_reward - est_reward_vec[action_index])
         agg_rev = agg_rev + total_reward
         agg_optimal_action = agg_optimal_action + is_optimal
 
@@ -93,7 +129,7 @@ for episode_idx in range(NUM_EPISODES):
 
     print("-" * 50)
 
-    if EPSILON <= 1.5:
+    if epsilon <= 0.0001:
         avg_curve = avg_curve + avg_vec
         avg_opt_curve = avg_opt_curve + avg_opt_vec
         all_avg_error = all_avg_error + agg_err / step_list.shape[1]
@@ -141,7 +177,7 @@ plt.grid(True)
 plt.figure(5)
 plt.plot(episode_idx, avg_opt_act)
 plt.xlabel("Episodes")
-plt.ylabel("Average Rev")
+plt.ylabel("Optimial_action_Selection")
 plt.grid(True)
 
 plt.show()

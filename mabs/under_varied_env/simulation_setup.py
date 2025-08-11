@@ -5,12 +5,13 @@ import logging
 from scipy.io import savemat
 from pprint import pformat
 
-from mabs import mab as script
-#from mabs import cmab_10f as script
+#from mabs import mab as script
+#from mabs.under_varied_env import cmab_under_new_env as script, new_env_config
+from mabs.under_varied_env import dcmab5_under_new_env as script
 #from mabs import dcmab_5f as script
 #from mabs import dcmab_10f as script
 
-output_dir = "mabs_outputs_sen4_mnak_5"
+output_dir = "mabs_outputs_sen6_varied_env"
 os.makedirs(output_dir, exist_ok=True)
 
 # === File paths ===
@@ -32,6 +33,7 @@ plot_info = {'curves': {
     },
     'config': config.config_dict,
     'episode_param': config.episode_param,
+    'new_episode_param': new_env_config.episode_param
     }
 
 savemat(mat_path, plot_info, )

@@ -1,39 +1,64 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import trange
 from config import config_dict, step_dict
 from env_simulations.env_functions import env_response
-import tqdm
-import matplotlib
+from mabs.utils import epsilon_greedy, model_builder, model_feeder_no_action, context_builder_5features, ReplayBuffer
 from mabs.under_varied_env import new_env_config
-matplotlib.use('TkAgg')  # or 'Qt5Agg' or another supported GUI backend
-import matplotlib.pyplot as plt
+# Epsilon setting
+NUM_FEATURES = 5
+
+BUFFER_CAPACITY = 5000
+BATCH_SIZE = 2500
+LEARNING_INTERVAL = 10
+EPOCHS = 20
 
 PRINT_UPDATE_INTERVAL = 20
-NUM_EPISODES = config_dict['num_episode_mab']  # 100
-LEARNING_RATE = config_dict['learning_rate_mab']  # 0.3
-EPSILON = config_dict['epsilon_mab']  # 0.15
 
-policy = config_dict['policy']
-step_list = new_env_config.step_dict['steps_param'] #step_dict['steps_param']
+# Epsilon setting
+EPSILON_INIT = config_dict['epsilon_initial']  # 0.99
+EPSILON_MIN = config_dict['epsilon_min']  # 0
+EPSILON_DECAY = config_dict['epsilon_decay']  # 0.03
+
+NUM_EPISODES = config_dict['num_episode_cmab']
+
+step_list = step_dict['steps_param']
 action_set = config_dict['action_set']
-optimal_actions_idx_vec =  new_env_config.step_dict['optimal_actions_idx_vec'] #step_dict['optimal_actions_idx_vec']
+optimal_actions_idx_vec = step_dict['optimal_actions_idx_vec']
 number_actions = len(action_set)
+
+input_model_size = NUM_FEATURES
 
 avg_error = []
 avg_rev = []
 avg_opt_act = []
 
-avg_curve = np.zeros(step_list.shape[1])
-avg_opt_curve = np.zeros(step_list.shape[1])
+avg_curve = np.zeros(new_env_config.step_dict['steps_param'].shape[1])
+avg_opt_curve = np.zeros(new_env_config.step_dict['steps_param'].shape[1])
 
-q_vec = np.zeros(number_actions)
+model_list = []
+buffers = []
+
+for index_action, action in enumerate(action_set):
+    model_list.append(model_builder(NUM_FEATURES, 0))
+    model_list[index_action].summary()
+    buffers.append(ReplayBuffer(capacity=BUFFER_CAPACITY, input_model_size=input_model_size))
 
 eps_zero_count = 0
 all_avg_error = 0
+online_learning = True
 
-for episode_idx in range(NUM_EPISODES):
+for episode_index in trange(NUM_EPISODES, desc="Training"):
 
-    q_vec = np.zeros(number_actions)
-    print(f"Episode: {episode_idx + 1}, Epsilon: {EPSILON}")
+    epsilon = max(EPSILON_MIN, EPSILON_INIT - (episode_index * EPSILON_DECAY))
+
+    if epsilon <= 0.0001:
+        step_list = new_env_config.step_dict['steps_param']
+        online_learning = False
+        optimal_actions_idx_vec = new_env_config.step_dict['optimal_actions_idx_vec']
+        print(new_env_config.coherence_per_part)
+
+    print(f"Episode: {episode_index + 1}, Epsilon: {epsilon}")
 
     # Randomly selecting the action and first episode
     action_index = np.random.choice(number_actions)
@@ -47,17 +72,27 @@ for episode_idx in range(NUM_EPISODES):
     config_dict['snr_tn'] = step_list[2][rnd_step_idx]
 
     # Initialize the first context
-    total_reward, _, _, _ = env_response(config_dict)
+    total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
+    context = context_builder_5features(corr_vec, power_jn_db, power_tn_db)
 
     avg_vec = []
     avg_opt_vec = []
     agg_err = 0
     agg_rev = 0
     agg_optimal_action = 0
+
     for counter, step_params in enumerate(np.array(step_list).T):
 
-        action_index = policy(EPSILON, q_vec)
-        config_dict['action_idx'] = action_index
+        est_reward_vec = []
+
+        for index_action, action in enumerate(action_set):
+            model = model_list[index_action]
+            model_input = model_feeder_no_action(context)
+            model_output = model.predict(model_input, verbose=False)
+            est_reward_vec = np.append(est_reward_vec, model_output.reshape(-1))
+
+        action_index = epsilon_greedy(epsilon, est_reward_vec)
+        config_dict['action_index'] = action_index
         config_dict['num_pilot_block'] = action_set[action_index]
 
         if counter % PRINT_UPDATE_INTERVAL == 0:
@@ -68,20 +103,32 @@ for episode_idx in range(NUM_EPISODES):
         config_dict['snr_jn'] = step_params[1]
         config_dict['snr_tn'] = step_params[2]
 
-        # Taking action in that context
-        total_reward, _, _, _ = env_response(config_dict)
+        # taking action in that context
+        total_reward, corr_vec, power_jn_db, power_tn_db = env_response(config_dict)
 
-        # Updating q vector q <- q + a ( r - q)
-        q_vec[action_index] = q_vec[action_index] + LEARNING_RATE * (total_reward - q_vec[action_index])
+        new_input_sample = model_feeder_no_action(context)
+        model = model_list[action_index]
+        buffer = buffers[action_index]
 
         is_optimal = 1 if optimal_actions_idx_vec[counter] == action_index else 0
 
-        agg_err = agg_err + abs(total_reward - q_vec[action_index])
+        agg_err = agg_err + abs(total_reward - est_reward_vec[action_index])
         agg_rev = agg_rev + total_reward
         agg_optimal_action = agg_optimal_action + is_optimal
 
         avg_vec.append(total_reward)
         avg_opt_vec.append(is_optimal)
+
+        # Adding data to buffer
+        buffer.add_to_buffer(new_input_sample, total_reward.reshape(-1, 1))
+
+        # Observing new context
+        context = context_builder_5features(corr_vec, power_jn_db, power_tn_db)
+
+        if counter % LEARNING_INTERVAL == 0 and counter > 0:
+            if online_learning:
+                batch_input, batch_output = buffer.sample_from_buffer(BATCH_SIZE)
+                model.fit(batch_input, batch_output, epochs=EPOCHS, verbose=False)
 
     avg_error.append(agg_err / step_list.shape[1])
     avg_rev.append(agg_rev / step_list.shape[1])
@@ -90,10 +137,9 @@ for episode_idx in range(NUM_EPISODES):
     print('\n', f'avg_err: {agg_err / step_list.shape[1]} ',
           f'avg_rev: {agg_rev / step_list.shape[1]} ',
           f'avg_opt_act: {agg_optimal_action / step_list.shape[1]} ')
-
     print("-" * 50)
 
-    if EPSILON <= 1.5:
+    if epsilon <= 0.0001:
         avg_curve = avg_curve + avg_vec
         avg_opt_curve = avg_opt_curve + avg_opt_vec
         all_avg_error = all_avg_error + agg_err / step_list.shape[1]
@@ -106,6 +152,7 @@ final_avg_error = all_avg_error / eps_zero_count
 print('total_average_rew: ', final_avg_rev)
 print('total_average_opt_act: ', final_avg_opt_act)
 print('total_average_error: ', final_avg_error)
+
 
 episode_idx = np.arange(NUM_EPISODES)
 
@@ -141,7 +188,7 @@ plt.grid(True)
 plt.figure(5)
 plt.plot(episode_idx, avg_opt_act)
 plt.xlabel("Episodes")
-plt.ylabel("Average Rev")
+plt.ylabel("Optimial_action_Selection")
 plt.grid(True)
 
 plt.show()

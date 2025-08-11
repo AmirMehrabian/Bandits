@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.io import savemat
+
 from config import config_dict, step_dict
 from env_simulations.env_functions import env_response
 from utils import epsilon_greedy, context_builder_10features
@@ -16,11 +18,18 @@ NUM_EXPLOIT_EPISODE = 20
 final_avg_error_vec = []
 final_avg_opt_act_vec = []
 final_avg_rev_vec = []
-NUM_ITER = 20
+NUM_ITER = 10
 # 100
 num_train_vec = [1, 2, 4, 6, 8, 10]
 
 for num_train in num_train_vec:
+
+    temp_save = {'final_avg_rev': final_avg_rev_vec,
+    'final_avg_opt_act': final_avg_opt_act_vec,
+    'final_avg_error': final_avg_error_vec,
+    'num_tain_vec': num_train_vec,
+    'num_iter': NUM_ITER,}
+    savemat('temp_data_cmab.mat', temp_save, )
     epsilon_vec = np.ones(num_train) - np.arange(num_train) / num_train
     epsilon_vec = np.concatenate([epsilon_vec, np.zeros(1)])
     print('num_train: ', num_train, epsilon_vec)

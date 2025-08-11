@@ -8,6 +8,7 @@ from pprint import pformat
 #from mabs import mab_episode_test as script
 #from mabs import cmab_episode_test as script
 from mabs import dcmab5_episode_test as script
+#from mabs import dcmab10_episode_test as script
 
 output_dir = "mabs_outputs_sen5_var_episodes"
 os.makedirs(output_dir, exist_ok=True)
