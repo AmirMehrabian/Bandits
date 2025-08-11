@@ -54,7 +54,7 @@ for episode_index in trange(NUM_EPISODES, desc="Training"):
 
     if epsilon <= 0.0001:
         step_list = new_env_config.step_dict['steps_param']
-        online_learning = False
+        online_learning = True #False
         optimal_actions_idx_vec = new_env_config.step_dict['optimal_actions_idx_vec']
         print(new_env_config.coherence_per_part)
 
@@ -129,6 +129,8 @@ for episode_index in trange(NUM_EPISODES, desc="Training"):
             if online_learning:
                 batch_input, batch_output = buffer.sample_from_buffer(BATCH_SIZE)
                 model.fit(batch_input, batch_output, epochs=EPOCHS, verbose=False)
+            else:
+                print('No online learning')
 
     avg_error.append(agg_err / step_list.shape[1])
     avg_rev.append(agg_rev / step_list.shape[1])
