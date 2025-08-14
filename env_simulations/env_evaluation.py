@@ -1,10 +1,15 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from config import config_dict
-from env_simulations.env_functions import env_response
+from env_simulations.env_functions import env_response, env_response_with_mitigation
+import matplotlib
+matplotlib.use('TkAgg')  # or 'Qt5Agg' or another supported GUI backend
+import matplotlib.pyplot as plt
 
-snr_tn_vec = np.arange(-10, 40, 4)
-num_iter = 200
+MITIGATION = True
+
+snr_tn_vec = np.arange(-16, 40, 4)
+num_iter = 20
 prob_sym_error_vec = []
 corr_vec = []
 corr_vec_nb = []
@@ -24,7 +29,7 @@ for snr_tn in snr_tn_vec:
     p_signal_agg = 0
 
     for _ in range(num_iter):
-        total_rev, r_state, p_jam, p_signal = env_response(config_dict)
+        total_rev, r_state, p_jam, p_signal = env_response_with_mitigation(config_dict, mitigation=MITIGATION)
         error = 1 - total_rev / nd
         agg_error = agg_error + error
         corr_agg = corr_agg + np.degrees(np.acos(np.abs(r_state))) / 90
