@@ -4,10 +4,11 @@ import config
 import logging
 from scipy.io import savemat
 from pprint import pformat
-
+from mabs.under_varied_env import new_env_config
 #from mabs import mab as script
 #from mabs.under_varied_env import cmab_under_new_env as script, new_env_config
-from mabs.under_varied_env import dcmab5_under_new_env as script
+#from mabs.under_varied_env import dcmab5_under_new_env as script
+from mabs.under_varied_env import dcmab10_uneder_new_env as script
 #from mabs import dcmab_5f as script
 #from mabs import dcmab_10f as script
 
@@ -15,7 +16,7 @@ output_dir = "mabs_outputs_sen6_varied_env"
 os.makedirs(output_dir, exist_ok=True)
 
 # === File paths ===
-file_base = script.__name__ + f''
+file_base = script.__name__ + f'_OL'
 mat_path = os.path.join(output_dir, f"{file_base}.mat")
 log_path = os.path.join(output_dir, f"{file_base}.log")
 

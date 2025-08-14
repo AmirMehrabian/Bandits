@@ -17,27 +17,30 @@ config_dict = {
     # Channel parameter
     "nakagami_shape_param": 2.0,
     # Action parameters
-    "action_set": np.array([1, 2, 5]),
+    "action_set": np.array([1, 4, 8]), #np.array([1, 8]), #np.array([1, 4, 8]) , #np.array([1, 2, 4, 5, 8]), #np.array([1, 8]),  # np.array([1, 4, 8]) , # np.array([1, 2, 4, 5, 8])# np.array([1, 2, 5]),
     "action_idx": 2,
     "num_pilot_block": 5,
     "epsilon_mab": 0.2,
     "learning_rate_mab": 0.5,  # 0.3,
     "num_episode_mab": 100,
-    "policy": epsilon_greedy, #lambda *x: 2,  # epsilon_greedy, #lambda *x: 2,  # epsilon_greedy
-    "num_episode_cmab": 50,
+    "policy": epsilon_greedy,  # lambda *x: 2,  # epsilon_greedy, #lambda *x: 2,  # epsilon_greedy
+    "num_episode_cmab": 60,
     "epsilon_initial": 0.99,
     "epsilon_min": 0,
-    "epsilon_decay": 0.1,
+    "epsilon_decay": 0.05,
 }
 print(config_dict)
 
-PART_SIZE = 20  # 100
-EPISODE_PARTS = 9
+PART_SIZE = 40  # 100
+EPISODE_PARTS = 6
 
-coherence_per_part =[1000, 3000, 5000, 1000, 3000, 5000, 1000, 3000, 5000] #training [5000, 3000, 5000]  # [1000, 3000, 5000]  # [5000, 3000, 1000, 5000, 3000]
-snr_jn_per_part = [40, 40, 40, 40, 40, 40, 40, 40, 40] #[20, 40, 40]  # [40, 40, 40]  # [20, 40, 40, 40, 40]
-snr_tn_per_part = [15, 15, 15, 20 , 20, 20, 25,25,25] #[10, 5, 20]  # [15, 15, 15]  # [10, 5, 20, 20, 20]
-optimal_actions_idx_per_part = [2,2,2,2,2,2,2,2,2] #[0, 2, 1]  # [2, 2, 1]  # [0, 2, 2, 1, 1]
+coherence_per_part = [5000, 5000, 3000, 3000, 1000, 1000]  # env_change [1000, 3000, 5000, 1000, 3000, 5000, 1000, 3000,
+# 5000]  # training [5000, 3000, 5000]  # [1000, 3000, 5000]  # [5000, 3000, 1000, 5000, 3000]
+snr_jn_per_part = [20, 30, 30, 40, 40, 40]
+# [40, 40, 40, 40, 40, 40, 40, 40, 40]  # [20, 40, 40]  # [40, 40, 40]  # [20, 40, 40, 40, 40]
+snr_tn_per_part = [20, 20, 20, 15, 15, 10]
+# [15, 15, 15, 20, 20, 20, 25, 25, 25]  # [10, 5, 20]  # [15, 15, 15]  # [10, 5, 20, 20, 20]
+optimal_actions_idx_per_part = [2, 2, 2, 2, 2, 2, 2, 2, 2]  # [0, 2, 1]  # [2, 2, 1]  # [0, 2, 2, 1, 1]
 
 # Initialize empty arrays
 num_coherence_symbols_part = []
