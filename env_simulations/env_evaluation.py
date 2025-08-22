@@ -4,6 +4,7 @@ from config import config_dict
 from env_simulations.env_functions import env_response
 
 snr_tn_vec = np.arange(-10, 40, 4)
+
 num_iter = 200
 prob_sym_error_vec = []
 corr_vec = []
