@@ -17,9 +17,12 @@ config_dict = {
     # Channel parameter
     "nakagami_shape_param": 2.0,
     # Action parameters
-    "action_set": np.array([1, 4, 8]), #np.array([1, 8]), #np.array([1, 4, 8]) , #np.array([1, 2, 4, 5, 8]), #np.array([1, 8]),  # np.array([1, 4, 8]) , # np.array([1, 2, 4, 5, 8])# np.array([1, 2, 5]),
-    "action_idx": 2,
-    "num_pilot_block": 5,
+    "action_set": np.array([1, 1]),
+    # np.array([1, 4, 8]),# np.array([1, 2, 4, 5, 8]), #np.array([1, 4, 8]),#np.array([1, 2, 4, 5, 8]), #np.array([1,
+    # 4, 8]), #np.array([1, 8]), #np.array([1, 4, 8]) , #np.array([1, 2, 4, 5, 8]), #np.array([1, 8]),  # np.array([
+    # 1, 4, 8]) , # np.array([1, 2, 4, 5, 8])# np.array([1, 2, 5]),
+    "action_idx": 0,
+    "num_pilot_block": 1,
     "epsilon_mab": 0.2,
     "learning_rate_mab": 0.5,  # 0.3,
     "num_episode_mab": 100,
