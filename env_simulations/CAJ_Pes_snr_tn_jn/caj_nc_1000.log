@@ -1,0 +1,29 @@
+INFO:root: ================================================== 2025-08-23 15:10:46 ==================================================
+
+            Simulation Results For caj_nc_1000
+
+            {'action_idx': 0,
+ 'action_set': array([1, 1]),
+ 'epsilon_decay': 0.05,
+ 'epsilon_initial': 0.99,
+ 'epsilon_mab': 0.2,
+ 'epsilon_min': 0,
+ 'learning_rate_mab': 0.5,
+ 'nakagami_shape_param': 2.0,
+ 'num_antennas': 64,
+ 'num_coherence_symbols': 1000,
+ 'num_data_symbols': 500,
+ 'num_episode_cmab': 60,
+ 'num_episode_mab': 100,
+ 'num_jn': 1,
+ 'num_pilot_block': 1,
+ 'num_pilot_symbols': 20,
+ 'num_sn': 4,
+ 'policy': <function epsilon_greedy at 0x789a029e1620>,
+ 'snr_jn': np.int64(38),
+ 'snr_tn': np.int64(17)}
+
+            "tau": 2.0
+
+            ==================================================================================================== 
+ 

@@ -11,13 +11,13 @@ import config
 from config import config_dict
 from env_simulations.env_functions import env_response
 
-snr_tn_vec = np.arange(-10, 20, 4)
+snr_tn_vec = np.arange(-10, 20, 3)
 snr_jn_vec = np.arange(10, 40, 4)
-config_dict['num_coherence_symbols'] = 5000
+config_dict['num_coherence_symbols'] = 10000
 tau_g = config_dict['num_coherence_symbols'] / config_dict['num_data_symbols']
 print(f"tau_g: {tau_g}")
 
-num_iter = 100
+num_iter = 5000
 prob_sym_error_vec = np.zeros((len(snr_jn_vec), len(snr_tn_vec)), dtype=float)
 corr_vec = np.zeros((len(snr_jn_vec), len(snr_tn_vec)), dtype=float)
 corr_vec_nb = np.zeros((len(snr_jn_vec), len(snr_tn_vec)), dtype=float)
@@ -95,7 +95,7 @@ output_dir = "CAJ_Pes_snr_tn_jn"
 os.makedirs(output_dir, exist_ok=True)
 
 # === File paths ===
-file_base = f'caj_nc_{config_dict["num_coherence_symbols"]}'
+file_base = f'caj_nc_{config_dict["num_coherence_symbols"]}_rerun'
 mat_path = os.path.join(output_dir, f"{file_base}.mat")
 log_path = os.path.join(output_dir, f"{file_base}.log")
 
