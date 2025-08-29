@@ -192,6 +192,7 @@ def env_response(config_dict):
 
 
 def env_response_with_mitigation(config_dict, mitigation=False):
+
     nb = config_dict["num_pilot_block"]
     num_sn = config_dict["num_sn"]
     num_jn = config_dict["num_jn"]
